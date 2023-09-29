@@ -8,10 +8,16 @@ import {
 } from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { decrementQuantity, incrementQuantity } from "../CartReducer";
+import {
+  cleanCart,
+  decrementQuantity,
+  incrementQuantity,
+} from "../CartReducer";
 import { decrementQty, incrementQty } from "../ProductReducer";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { auth, db } from "../firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 const CartScreen = () => {
   const cart = useSelector((state) => state.cart.cart);
@@ -22,7 +28,22 @@ const CartScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const route = useRoute();
+  const userUid = auth.currentUser.uid;
   // console.log(route.params.pickUpDate);
+  const placeOrder = async () => {
+    navigation.navigate("Order");
+    dispatch(cleanCart());
+    await setDoc(
+      doc(db, "users", `${userUid}`),
+      {
+        orders: { ...cart },
+        pickUpDetails: route.params,
+      },
+      {
+        merge: true,
+      }
+    );
+  };
   return (
     <>
       <ScrollView style={{ marginTop: 50 }}>
@@ -291,7 +312,7 @@ const CartScreen = () => {
                     To Pay
                   </Text>
                   <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-                    {total + 15}
+                    {total + 15}$
                   </Text>
                 </View>
               </View>
@@ -330,7 +351,7 @@ const CartScreen = () => {
             </Text>
           </View>
 
-          <Pressable>
+          <Pressable onPress={placeOrder}>
             <Text style={{ fontSize: 17, fontWeight: "600", color: "white" }}>
               Place Order
             </Text>
