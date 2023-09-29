@@ -15,8 +15,19 @@ import * as Location from "expo-location";
 import { MaterialIcons } from "@expo/vector-icons";
 import Carousel from "../components/Carousel";
 import Services from "../components/Services";
+import DressItem from "../components/DressItem";
+import { useDispatch, useSelector } from "react-redux";
+import { getProducts } from "../ProductReducer";
+import { useNavigation } from "@react-navigation/native";
 
 const HomeScreen = () => {
+  const cart = useSelector((state) => state.cart.cart);
+  // console.log(cart);
+  const total = cart
+    .map((item) => item.quantity * item.price)
+    .reduce((curr, prev) => curr + prev, 0);
+
+  const navigation = useNavigation();
   const [displayCurrentAddress, setDisplayCurrentAddress] = useState(
     "We are detecting your location"
   );
@@ -80,6 +91,19 @@ const HomeScreen = () => {
   };
 
   // products data
+  const product = useSelector((state) => state.product.product);
+  const dispatch = useDispatch();
+  // console.log("product arr", product);
+  useEffect(() => {
+    if (product.length > 0) {
+      return;
+    }
+    const fetchProducts = () => {
+      services.map((service) => dispatch(getProducts(service)));
+    };
+    fetchProducts();
+  }, []);
+  // console.log(product);
   const services = [
     {
       id: "0",
@@ -133,46 +157,86 @@ const HomeScreen = () => {
   ];
 
   return (
-    <ScrollView style={{ backgroundColor: "#F0F0F0", flex: 1, marginTop: 50 }}>
-      {/* lcoation and profile */}
-      <View style={{ flexDirection: "row", alignItems: "center" }}>
-        <MaterialIcons name="location-pin" size={30} color="#fd5c63" />
-        <View>
-          <Text style={{ fontSize: 18, fontWeight: "600" }}>Home</Text>
-          <Text>{displayCurrentAddress}</Text>
-        </View>
-        <Pressable style={{ marginLeft: "auto", marginRight: 7 }}>
-          <Image
-            style={{ width: 40, height: 40, borderRadius: 20 }}
-            source={{
-              uri: "https://lh3.googleusercontent.com/a/ACg8ocLdCGDtNyQjHz8Wk0Eeqjse4dakvHOifD6e70uVGwqBtuE=s576-c-no",
-            }}
-          ></Image>
-        </Pressable>
-      </View>
-
-      {/* serch bar */}
-
-      <View
-        style={{
-          padding: 10,
-          margin: 10,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          borderWidth: 0.8,
-          borderColor: "#c0c0c0",
-          borderRadius: 7,
-        }}
+    <>
+      <ScrollView
+        style={{ backgroundColor: "#F0F0F0", flex: 1, marginTop: 50 }}
       >
-        <TextInput placeholder="Search for items..."></TextInput>
-        <MaterialIcons name="search" size={28} color="#fd5c63" />
-      </View>
-      {/* image carousel */}
-      <Carousel />
-      {/* services offerd */}
-      <Services />
-    </ScrollView>
+        {/* lcoation and profile */}
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <MaterialIcons name="location-pin" size={30} color="#fd5c63" />
+          <View>
+            <Text style={{ fontSize: 18, fontWeight: "600" }}>Home</Text>
+            <Text>{displayCurrentAddress}</Text>
+          </View>
+          <Pressable style={{ marginLeft: "auto", marginRight: 7 }}>
+            <Image
+              style={{ width: 40, height: 40, borderRadius: 20 }}
+              source={{
+                uri: "https://lh3.googleusercontent.com/a/ACg8ocLdCGDtNyQjHz8Wk0Eeqjse4dakvHOifD6e70uVGwqBtuE=s576-c-no",
+              }}
+            ></Image>
+          </Pressable>
+        </View>
+
+        {/* serch bar */}
+
+        <View
+          style={{
+            padding: 10,
+            margin: 10,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderWidth: 0.8,
+            borderColor: "#c0c0c0",
+            borderRadius: 7,
+          }}
+        >
+          <TextInput placeholder="Search for items..."></TextInput>
+          <MaterialIcons name="search" size={28} color="#fd5c63" />
+        </View>
+        {/* image carousel */}
+        <Carousel />
+        {/* services offerd */}
+        <Services />
+        {/* render all prods */}
+        {product.map((item, index) => {
+          return <DressItem item={item} key={index} />;
+        })}
+      </ScrollView>
+
+      {total === 0 ? null : (
+        <Pressable
+          style={{
+            backgroundColor: "#088F8F",
+            padding: 10,
+            marginBottom: 40,
+            margin: 15,
+            borderRadius: 7,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <View>
+            <Text style={{ fontSize: 17, fontWeight: "600", color: "white" }}>
+              {" "}
+              {cart.length} items | {total}$
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => {
+              navigation.navigate("PickUp");
+            }}
+          >
+            <Text style={{ fontSize: 17, fontWeight: "600", color: "white" }}>
+              {" "}
+              Proceed to pickup
+            </Text>
+          </Pressable>
+        </Pressable>
+      )}
+    </>
   );
 };
 
